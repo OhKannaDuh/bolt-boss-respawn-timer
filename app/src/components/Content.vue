@@ -1,7 +1,27 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import BoltBrowser from "koala/BoltBrowser";
+
+const props = defineProps<{
+  plugin: BoltBrowser;
+}>();
+
+import { computed, ref, type Ref } from "vue";
 
 const tps = 60;
+
+type Times = {
+  standard: number;
+  fast: number;
+  fastest: number;
+}
+
+const times: Times = { // Respawn time in milliseconds
+  standard: 72000,
+  fast: 50000,
+  fastest: 27000,
+}
+
+const mode: Ref<keyof Times> = ref('fastest')
 
 const interval = ref<undefined | number>(undefined);
 const lastFrameTime = ref(new Date(0));
@@ -19,12 +39,17 @@ const tick = () => {
   lastFrameTime.value = currentTime;
 
   // If more than an hour has elapsed
-  timeElapsed.value = new Date(timeElapsed.value.getTime() + delta.getTime());
+  timeElapsed.value = new Date(timeElapsed.value.getTime() - delta.getTime());
+  if (timeElapsed.value.getTime() <= 0) {
+    timeElapsed.value = new Date(0)
+    stop()
+  }
 };
 
 const start = () => {
   stopped.value = false;
   lastFrameTime.value = new Date();
+  timeElapsed.value = new Date(times[mode.value])
   interval.value = window.setInterval(tick, 1000 / tps);
 };
 
@@ -56,10 +81,22 @@ const displayTime = computed(() => {
   components = components.concat([
     timeElapsed.value.getUTCMinutes().toString().padStart(2, "0"),
     timeElapsed.value.getUTCSeconds().toString().padStart(2, "0"),
-    timeElapsed.value.getUTCMilliseconds().toString().padStart(3, "0"),
   ]);
 
   return components.join(":");
+});
+
+const set_mode = (key: keyof Times) => {
+  mode.value = key
+  props.plugin.message('mode', {mode: key})
+}
+
+props.plugin.onmessage('start', (_) => {
+  start()
+});
+
+props.plugin.onmessage('config', (data) => {
+  mode.value = data.respawn_speed ?? 'fastest'
 });
 </script>
 
@@ -69,10 +106,10 @@ const displayTime = computed(() => {
       {{ displayTime }}
     </div>
     <div class="controls">
-      <button class="button" @click="toggle">
-        {{ stopped ? "Start" : "Stop" }}
-      </button>
-      <button class="button" @click="reset">Reset</button>
+      <button class="button" :class="{active: mode === 'standard'}" @click="set_mode('standard')">Standard</button>
+      <button class="button" :class="{active: mode === 'fast'}" @click="set_mode('fast')">Fast</button>
+      <button class="button" :class="{active: mode === 'fastest'}" @click="set_mode('fastest')">Fastest</button>
+
     </div>
   </div>
 </template>
@@ -96,6 +133,7 @@ const displayTime = computed(() => {
 
 .controls {
   display: flex;
+  flex-direction: column;
   justify-content: center;
 }
 

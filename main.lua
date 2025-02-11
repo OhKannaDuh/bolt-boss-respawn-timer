@@ -1,6 +1,7 @@
 require('sloth.library')
+require('sloth.modules.chat')
 
-local plugin = Plugin()
+local plugin = Plugin("Boss Respawn Timer")
 plugin.bolt.checkversion(1, 0)
 
 plugin:load_config({
@@ -12,7 +13,8 @@ plugin:load_config({
             height = 70,
             width = 150
         }
-    }
+    },
+    respawn_speed = 'fastest'
 })
 
 local app = EmbeddedBrowser(plugin, {
@@ -37,6 +39,26 @@ app:add_callback('after_close', function(event)
     plugin:save_config()
     plugin.bolt.close()
 end)
+
+app:onmessage('ready', function()
+    app:message('config', plugin.config.data)
+end)
+
+app:onmessage('mode', function(data)
+    plugin.config.data.respawn_speed = data.mode
+    plugin:save_config()
+end)
+
+local chat = Chat(plugin)
+chat:add_callback(function(message)
+    if string.find(message, '^CompletionTime:') == nil then
+        return
+    end
+    
+    app:message('start')
+end)
+
+plugin:add_module(chat)
 
 plugin:start()
 app:open()

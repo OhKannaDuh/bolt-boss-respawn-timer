@@ -1,6 +1,6 @@
 {
-  "name": "Stopwatch",
+  "name": "Boss Respawn Timer",
   "version": "1.0.0",
-  "description": "A basic stopwatch plugin",
+  "description": "Shows a countdown until a boss respawns",
   "main": "main.lua"
 }
