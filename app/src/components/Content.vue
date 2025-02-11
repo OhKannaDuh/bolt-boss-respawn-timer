@@ -13,15 +13,16 @@ type Times = {
   standard: number;
   fast: number;
   fastest: number;
-}
+};
 
-const times: Times = { // Respawn time in milliseconds
+const times: Times = {
+  // Respawn time in milliseconds
   standard: 72000,
   fast: 50000,
   fastest: 27000,
-}
+};
 
-const mode: Ref<keyof Times> = ref('fastest')
+const mode: Ref<keyof Times> = ref("fastest");
 
 const interval = ref<undefined | number>(undefined);
 const lastFrameTime = ref(new Date(0));
@@ -41,15 +42,15 @@ const tick = () => {
   // If more than an hour has elapsed
   timeElapsed.value = new Date(timeElapsed.value.getTime() - delta.getTime());
   if (timeElapsed.value.getTime() <= 0) {
-    timeElapsed.value = new Date(0)
-    stop()
+    timeElapsed.value = new Date(0);
+    stop();
   }
 };
 
 const start = () => {
   stopped.value = false;
   lastFrameTime.value = new Date();
-  timeElapsed.value = new Date(times[mode.value])
+  timeElapsed.value = new Date(times[mode.value]);
   interval.value = window.setInterval(tick, 1000 / tps);
 };
 
@@ -59,44 +60,24 @@ const stop = () => {
   interval.value = undefined;
 };
 
-const toggle = () => {
-  stopped.value ? start() : stop();
-};
-
-const reset = () => {
-  timeElapsed.value = new Date(0);
-  stop();
-};
-
 const displayTime = computed(() => {
-  let components = [];
-
-  // If more than an hour has elapsed
-  if (timeElapsed.value.getTime() >= 3600000) {
-    components.push(
-      timeElapsed.value.getUTCHours().toString().padStart(2, "0")
-    );
-  }
-
-  components = components.concat([
+  return [
     timeElapsed.value.getUTCMinutes().toString().padStart(2, "0"),
     timeElapsed.value.getUTCSeconds().toString().padStart(2, "0"),
-  ]);
-
-  return components.join(":");
+  ].join(":");
 });
 
 const set_mode = (key: keyof Times) => {
-  mode.value = key
-  props.plugin.message('mode', {mode: key})
-}
+  mode.value = key;
+  props.plugin.message("mode", { mode: key });
+};
 
-props.plugin.onmessage('start', (_) => {
-  start()
+props.plugin.onmessage("start", (_) => {
+  start();
 });
 
-props.plugin.onmessage('config', (data) => {
-  mode.value = data.respawn_speed ?? 'fastest'
+props.plugin.onmessage("config", (data) => {
+  mode.value = data.respawn_speed ?? "fastest";
 });
 </script>
 
@@ -106,10 +87,27 @@ props.plugin.onmessage('config', (data) => {
       {{ displayTime }}
     </div>
     <div class="controls">
-      <button class="button" :class="{active: mode === 'standard'}" @click="set_mode('standard')">Standard</button>
-      <button class="button" :class="{active: mode === 'fast'}" @click="set_mode('fast')">Fast</button>
-      <button class="button" :class="{active: mode === 'fastest'}" @click="set_mode('fastest')">Fastest</button>
-
+      <button
+        class="button"
+        :class="{ active: mode === 'standard' }"
+        @click="set_mode('standard')"
+      >
+        Standard
+      </button>
+      <button
+        class="button"
+        :class="{ active: mode === 'fast' }"
+        @click="set_mode('fast')"
+      >
+        Fast
+      </button>
+      <button
+        class="button"
+        :class="{ active: mode === 'fastest' }"
+        @click="set_mode('fastest')"
+      >
+        Fastest
+      </button>
     </div>
   </div>
 </template>

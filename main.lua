@@ -51,10 +51,11 @@ end)
 
 local chat = Chat(plugin)
 chat:add_callback(function(message)
+    plugin:debug("Message: " .. message)
     if string.find(message, '^CompletionTime:') == nil then
         return
     end
-    
+
     app:message('start')
 end)
 
